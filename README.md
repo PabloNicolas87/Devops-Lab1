@@ -161,7 +161,7 @@ Sigue estos pasos para crear un nuevo proyecto a partir de esta plantilla:
 
 ---
 
-## 🤝 Contribuir
+## 🤝 Contribuciones
 
 Si quieres mejorar o sugerir cambios:
 
