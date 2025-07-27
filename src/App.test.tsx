@@ -1,8 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import App from './App'
 
-test('falla a propósito', () => {
+test('muestra el mensaje principal', () => {
   render(<App />)
-  expect(screen.getByText(/esto no existe/i)).toBeInTheDocument()
+  expect(screen.getByText(/Tecnologías del Proyecto/i)).toBeInTheDocument()
 })
-
