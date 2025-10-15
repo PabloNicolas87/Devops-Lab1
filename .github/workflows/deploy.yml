@@ -12,7 +12,6 @@ jobs:
     env:
       VERSION: latest
       DOCKER_USER: ${{ secrets.DOCKERHUB_USERNAME }}
-      # Variable ECR: Debe coincidir con el repositorio creado en AWS
       ECR_REPOSITORY_NAME: proyectobase-runtime
       
     steps:
