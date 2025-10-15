@@ -52,7 +52,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }} # Por ejemplo: us-east-1
+          aws-region: ${{ secrets.REGION }}
 
       - name: 🐳 Login to Amazon ECR
         id: login-ecr
@@ -68,7 +68,7 @@ jobs:
 
       # --- CONSTRUCCIÓN Y PUSH CON EL ACTION CORREGIDO ---
       
-      # 🔨 BUILDER IMAGE (Push SOLO a Docker Hub)
+      # 🔨 BUILDER IMAGE (Push SOLO a Docker Hub - Usa build-push-action)
       - name: 🔨 Build & Push BUILDER image (Docker Hub Only)
         uses: docker/build-push-action@v5
         with:
@@ -88,11 +88,10 @@ jobs:
           file: ./Dockerfile
           target: production # Etapa 'production' del Dockerfile
           push: true
+          # Lista de Tags: Múltiples tags para ambos registros
           tags: |
-            # Tags para DOCKER HUB
             ${{ env.DOCKER_USER }}/proyectobase-runtime:${{ env.VERSION }}
             ${{ env.DOCKER_USER }}/proyectobase-runtime:latest
-            # Tags para ECR (usando la salida del login-ecr)
             ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_NAME }}:${{ env.VERSION }}
             ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_NAME }}:latest
 
