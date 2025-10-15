@@ -12,9 +12,8 @@ jobs:
     env:
       VERSION: latest
       DOCKER_USER: ${{ secrets.DOCKERHUB_USERNAME }}
-      
-      # ⚠️ NUEVA VARIABLE: Define el nombre del repositorio ECR (sin el URI completo)
-      ECR_REPOSITORY_NAME: proyectobase-runtime # <--- Mismo nombre que la imagen Docker Hub
+      # Variable ECR: Debe coincidir con el repositorio creado en AWS
+      ECR_REPOSITORY_NAME: proyectobase-runtime
       
     steps:
       - name: 📥 Checkout repo
@@ -42,23 +41,24 @@ jobs:
       - name: 🧪 Run tests
         run: npm run test
 
+      # Configuración de Docker Buildx (necesario para el action build-push)
       - name: 🐳 Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-
-      # --- NUEVOS PASOS: AUTENTICACIÓN AWS y LOGIN ECR ---
+        
+      # --- AUTENTICACIÓN AWS y LOGIN ECR ---
       
       - name: ⚙️ Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ secrets.AWS_REGION }} # Por ejemplo: us-east-1
 
       - name: 🐳 Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
         
-      # --- PASO EXISTENTE: LOGIN DOCKER HUB ---
+      # --- LOGIN DOCKER HUB ---
       
       - name: 🐳 Log in to Docker Hub
         uses: docker/login-action@v2
@@ -66,37 +66,35 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # --- LÓGICA DE BUILD/PUSH DUAL (Reemplaza los dos pasos anteriores de push) ---
+      # --- CONSTRUCCIÓN Y PUSH CON EL ACTION CORREGIDO ---
+      
+      # 🔨 BUILDER IMAGE (Push SOLO a Docker Hub)
+      - name: 🔨 Build & Push BUILDER image (Docker Hub Only)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          target: builder # Etapa 'builder' del Dockerfile
+          push: true
+          tags: |
+            ${{ env.DOCKER_USER }}/proyectobase-builder:${{ env.VERSION }}
+            ${{ env.DOCKER_USER }}/proyectobase-builder:latest
 
-      # 🔨 BUILDER IMAGE (Solo se construye, ya que no la necesitamos en ECR)
-      - name: 🔨 Build BUILDER image
-        run: |
-          docker build --target builder \
-            -t ${DOCKER_USER}/proyectobase-builder:${{ env.VERSION }} \
-            -t ${DOCKER_USER}/proyectobase-builder:latest .
-          docker push ${DOCKER_USER}/proyectobase-builder:${{ env.VERSION }}
-          docker push ${DOCKER_USER}/proyectobase-builder:latest
-
-      # ⚙️ RUNTIME IMAGE (Construcción Única y Push Dual)
-      - name: ⚙️ Build & Push RUNTIME image (Docker Hub + ECR)
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        run: |
-          # 1. Definir Tags para ambos registros
-          DOCKERHUB_TAGS="${{ env.DOCKER_USER }}/proyectobase-runtime:${{ env.VERSION }} ${{ env.DOCKER_USER }}/proyectobase-runtime:latest"
-          ECR_TAGS="${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY_NAME }}:${{ env.VERSION }} ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY_NAME }}:latest"
-          ALL_TAGS="$DOCKERHUB_TAGS $ECR_TAGS"
-          
-          # 2. Construir UNA VEZ con todos los tags
-          docker build --target production -t $ALL_TAGS .
-          
-          # 3. PUSH Dual: Empujar a Docker Hub
-          docker push ${{ env.DOCKER_USER }}/proyectobase-runtime:${{ env.VERSION }}
-          docker push ${{ env.DOCKER_USER }}/proyectobase-runtime:latest
-
-          # 4. PUSH Dual: Empujar a ECR
-          docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY_NAME }}:${{ env.VERSION }}
-          docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY_NAME }}:latest
+      # ⚙️ RUNTIME IMAGE (Construcción Única y Push Dual a Docker Hub y ECR)
+      - name: ⚙️ Build & Push RUNTIME image (Dual Push)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          target: production # Etapa 'production' del Dockerfile
+          push: true
+          tags: |
+            # Tags para DOCKER HUB
+            ${{ env.DOCKER_USER }}/proyectobase-runtime:${{ env.VERSION }}
+            ${{ env.DOCKER_USER }}/proyectobase-runtime:latest
+            # Tags para ECR (usando la salida del login-ecr)
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_NAME }}:${{ env.VERSION }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_NAME }}:latest
 
       - name: 🧹 Clean up dangling images
         run: docker image prune -f
