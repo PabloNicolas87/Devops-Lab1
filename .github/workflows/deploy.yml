@@ -41,7 +41,7 @@ jobs:
       - name: 🧪 Run tests
         run: npm run test
 
-      # Configuración de Docker Buildx (necesario para el action build-push)
+      # Configuración de Docker Buildx
       - name: 🐳 Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         
@@ -50,6 +50,9 @@ jobs:
       - name: ⚙️ Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
+          # Es CRÍTICO que el IAM User usado aquí tenga permisos para:
+          # 1. Acceder a ECR (ecr:*)
+          # 2. Actualizar ECS (ecs:UpdateService)
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
@@ -66,15 +69,15 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # --- CONSTRUCCIÓN Y PUSH CON EL ACTION CORREGIDO ---
+      # --- CONSTRUCCIÓN Y PUSH DUAL ---
       
-      # 🔨 BUILDER IMAGE (Push SOLO a Docker Hub - Usa build-push-action)
+      # 🔨 BUILDER IMAGE (Push SOLO a Docker Hub)
       - name: 🔨 Build & Push BUILDER image (Docker Hub Only)
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
-          target: builder # Etapa 'builder' del Dockerfile
+          target: builder
           push: true
           tags: |
             ${{ env.DOCKER_USER }}/proyectobase-builder:${{ env.VERSION }}
@@ -86,9 +89,8 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
-          target: production # Etapa 'production' del Dockerfile
+          target: production
           push: true
-          # Lista de Tags: Múltiples tags para ambos registros
           tags: |
             ${{ env.DOCKER_USER }}/proyectobase-runtime:${{ env.VERSION }}
             ${{ env.DOCKER_USER }}/proyectobase-runtime:latest
@@ -97,3 +99,14 @@ jobs:
 
       - name: 🧹 Clean up dangling images
         run: docker image prune -f
+
+      # --- 🚀 PASO NUEVO: DEPLOY A ECS (CD) ---
+      - name: 🚀 Force New Deployment on ECS Service
+        run: |
+          echo "Deploying new image to ECS..."
+          aws ecs update-service \
+            --cluster frontend-cluster \
+            --service frontend-service \
+            --force-new-deployment \
+            --region ${{ secrets.AWS_REGION }}
+          echo "Deployment initiated. ECS will now pull the latest image from ECR."
