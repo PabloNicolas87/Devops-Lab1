@@ -27,7 +27,7 @@ const technologies = [
   },
   {
     name: "Vitest",
-    logo: "https://vitest.dev/logo.svg", // imagen oficial SVG
+    logo: "https://vitest.dev/logo.svg",
   },
   {
     name: "Docker",
@@ -36,6 +36,10 @@ const technologies = [
   {
     name: "GitHub Actions",
     logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg",
+  },
+  {
+    name: "ECR con ECS y Fargate",
+    logo: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/amazonwebservices/amazonwebservices-plain-wordmark.svg",
   },
 ];
 
