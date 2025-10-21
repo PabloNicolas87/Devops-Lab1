@@ -36,6 +36,10 @@ const technologies = [
   {
     name: "GitHub Actions",
     logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg",
+  },
+  {
+    name: "ECR & EC2 en AWS",
+    logo: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/amazonwebservices/amazonwebservices-plain-wordmark.svg",
   }
 ];
 
