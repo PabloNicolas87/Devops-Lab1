@@ -48,7 +48,6 @@ jobs:
       - name: ⚙️ Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          # Permisos requeridos para este usuario IAM: ecr:*, ssm:SendCommand
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
@@ -63,7 +62,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # --- CONSTRUCCIÓN Y PUSH DUAL ---
+      # --- CONSTRUCCIÓN Y PUSH DUAL (ELIMINANDO REDUNDANCIA DE ECS) ---
       
       - name: 🔨 Build & Push BUILDER image (Docker Hub Only)
         uses: docker/build-push-action@v5
@@ -92,29 +91,34 @@ jobs:
       - name: 🧹 Clean up dangling images
         run: docker image prune -f
 
-      # --- 🚀 DEPLOY A EC2 VÍA SSM CLI ---
+      # --- 🚀 PASO FINAL: DEPLOY A EC2 VÍA SSM CLI (CORREGIDO) ---
       - name: 🚀 Deploy to EC2 via SSM Run Command (CLI)
         id: deploy_ssm
         run: |
           echo "Sending deployment commands to EC2 instance..."
           
-          INSTANCE_ID="i-0b80afdbc08bd177a"
+          INSTANCE_ID="i-0b80afdbc08bd177a" # <-- VERIFICA ESTE ID
           REGION="${{ secrets.AWS_REGION }}"
-          ECR_REPO_URL="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${REGION}.amazonaws.com/proyectobase-runtime:latest"
+          ACCOUNT_ID="${{ secrets.AWS_ACCOUNT_ID }}"
+          ECR_REPO_URL="$ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/proyectobase-runtime:latest"
           
-          DEPLOY_COMMANDS='
+          DEPLOY_COMMANDS=$(cat << 'EOF'
+            # Detener y eliminar contenedor antiguo (ignora errores si no hay ninguno)
             sudo docker stop $(sudo docker ps -q) || true;
             sudo docker rm $(sudo docker ps -aq) || true;
             
             sudo aws ecr get-login-password --region '$REGION' | sudo docker login --username AWS --password-stdin $(echo '$ECR_REPO_URL' | cut -d/ -f1);
-          
+            
             sudo docker pull '$ECR_REPO_URL';
             sudo docker run -d -p 80:80 '$ECR_REPO_URL';
             
             echo "Deployment finished!";
-          '
+          EOF
+          )
+          
           aws ssm send-command \
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
-            --parameters commands="$DEPLOY_COMMANDS" \
+            --parameters "commands=[$DEPLOY_COMMANDS]" \
             --region "$REGION"
+
