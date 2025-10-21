@@ -36,11 +36,7 @@ const technologies = [
   {
     name: "GitHub Actions",
     logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg",
-  },
-  {
-    name: "ECR con ECS y Fargate",
-    logo: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/amazonwebservices/amazonwebservices-plain-wordmark.svg",
-  },
+  }
 ];
 
 interface TechnologiesProps {
