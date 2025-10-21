@@ -62,7 +62,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # --- CONSTRUCCIÓN Y PUSH DUAL (ELIMINANDO REDUNDANCIA DE ECS) ---
+      # --- CONSTRUCCIÓN Y PUSH DUAL ---
       
       - name: 🔨 Build & Push BUILDER image (Docker Hub Only)
         uses: docker/build-push-action@v5
@@ -91,7 +91,7 @@ jobs:
       - name: 🧹 Clean up dangling images
         run: docker image prune -f
 
-      # --- 🚀 PASO FINAL: DEPLOY A EC2 VÍA SSM CLI (CORREGIDO) ---
+      # --- 🚀 PASO FINAL: DEPLOY A EC2 VÍA SSM CLI ---
       - name: 🚀 Deploy to EC2 via SSM Run Command (CLI)
         id: deploy_ssm
         run: |
@@ -101,23 +101,23 @@ jobs:
           REGION="${{ secrets.AWS_REGION }}"
           ACCOUNT_ID="${{ secrets.AWS_ACCOUNT_ID }}"
           ECR_REPO_URL="$ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/proyectobase-runtime:latest"
-          
-          DEPLOY_COMMANDS=$(cat << 'EOF'
-            sudo docker stop $(sudo docker ps -q) || true;
-            sudo docker rm $(sudo docker ps -aq) || true;
-            
-            sudo aws ecr get-login-password --region '$REGION' | sudo docker login --username AWS --password-stdin $(echo '$ECR_REPO_URL' | cut -d/ -f1);
-            
-            sudo docker pull '$ECR_REPO_URL';
-            sudo docker run -d -p 80:80 '$ECR_REPO_URL';
-            
-            echo "Deployment finished!";
+          cat > ssm_params.json <<EOF
+          {
+            "commands": [
+              "sudo docker ps -q | xargs -r sudo docker stop || true",
+              "sudo docker ps -aq | xargs -r sudo docker rm || true",
+              "sudo aws ecr get-login-password --region $REGION | sudo docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com",
+              "sudo docker pull $ECR_REPO_URL",
+              "sudo docker run -d -p 80:80 $ECR_REPO_URL",
+              "echo 'Deployment finished!'"
+            ]
+          }
           EOF
-          )
-          
+
           aws ssm send-command \
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
-            --parameters "commands=[$DEPLOY_COMMANDS]" \
+            --parameters file://ssm_params.json \
             --region "$REGION"
+
 
