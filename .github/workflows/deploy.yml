@@ -97,13 +97,12 @@ jobs:
         run: |
           echo "Sending deployment commands to EC2 instance..."
           
-          INSTANCE_ID="i-0b80afdbc08bd177a" # <-- VERIFICA ESTE ID
+          INSTANCE_ID="i-0b80afdbc08bd177a"
           REGION="${{ secrets.AWS_REGION }}"
           ACCOUNT_ID="${{ secrets.AWS_ACCOUNT_ID }}"
           ECR_REPO_URL="$ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/proyectobase-runtime:latest"
           
           DEPLOY_COMMANDS=$(cat << 'EOF'
-            # Detener y eliminar contenedor antiguo (ignora errores si no hay ninguno)
             sudo docker stop $(sudo docker ps -q) || true;
             sudo docker rm $(sudo docker ps -aq) || true;
             
