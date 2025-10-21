@@ -101,7 +101,6 @@ jobs:
           REGION="${{ secrets.AWS_REGION }}"
           ACCOUNT_ID="${{ secrets.AWS_ACCOUNT_ID }}"
           ECR_REPO_URL="$ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/proyectobase-runtime:latest"
-          # Build SSM parameters JSON file to avoid complex escaping in CLI
           cat > ssm_params.json <<EOF
           {
             "commands": [
