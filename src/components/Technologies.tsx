@@ -40,6 +40,10 @@ const technologies = [
   {
     name: "ECR & EC2 en AWS",
     logo: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/amazonwebservices/amazonwebservices-plain-wordmark.svg",
+  },
+  {
+    name: "Terraform",
+    logo: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/terraform/terraform-original.svg",
   }
 ];
 
