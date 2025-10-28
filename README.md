@@ -73,6 +73,9 @@ terraform apply
 terraform destroy
 ```
 
+When executing the Terraform project (`Devops-Lab1-Terraform-IaC`), the output includes the **EC2 instance ID**.  
+This value must be manually copied into the **GitHub Secrets** of this repository (`Devops-Lab1`) as `INSTANCE_ID` to allow the CI/CD pipeline to deploy directly into that EC2 instance.
+
 ---
 
 ## 🧩 Architecture Overview
@@ -117,7 +120,8 @@ terraform destroy
 - Configuring a dual push strategy (DockerHub + ECR).  
 - Automating deployments through AWS SSM.  
 - Using Terraform to provision and destroy cloud resources safely.  
-- Establishing a reproducible baseline for future DevOps labs.
+- Establishing a reproducible baseline for future DevOps labs.  
+- Understanding the manual link between IaC (Terraform outputs) and CI/CD (GitHub Secrets).
 
 ---
 
