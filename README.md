@@ -10,10 +10,10 @@ Each lab in the Golden Path focuses on a different stage of the DevOps lifecycle
 
 The goal of this DevOps Golden Path is to create a series of modular, production-grade projects that evolve progressively:
 
-1. **Lab 1 – Containerization & CI/CD (this repo)**  
-2. **Lab 2 – Serverless Evolution**  
-3. **Lab 3 – Persistence & Databases**  
-4. **Lab 4 – Orchestration (ECS / Fargate)**  
+1. **Lab 1 – Containerization & CI/CD (this repo)**
+2. **Lab 2 – Orchestration (ECS / Fargate)**  
+3. **Lab 3 – Serverless Evolution**  
+4. **Lab 4 – Persistence & Databases**  
 5. **Lab 5 – CI/CD Advanced & Observability**
 
 Each lab has its own GitHub repository and its own Infrastructure-as-Code (IaC) project in Terraform, enabling full automation and reproducibility.
