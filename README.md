@@ -126,7 +126,7 @@ This value must be manually copied into the **GitHub Secrets** of this repositor
 ---
 
 ## 🔜 Next Step
-The next module, **[Devops-Lab2 – Serverless Evolution](https://github.com/PabloNicolas87/Devops-Lab2)**, will extend this base project by deploying the runtime into AWS Lambda and serving the static frontend from Amazon S3 via API Gateway.
+The next module, **[Devops-Lab2 – Orchestration (ECS / Fargate)](https://github.com/PabloNicolas87/Devops-Lab2)**, will extend this base project by deploying the runtime into AWS Lambda and serving the static frontend from Amazon S3 via API Gateway.
 
 ---
 
