@@ -74,7 +74,7 @@ terraform destroy
 ```
 
 When executing the Terraform project (`Devops-Lab1-Terraform-IaC`), the output includes the **EC2 instance ID**.  
-This value must be manually copied into the **GitHub Secrets** of this repository (`Devops-Lab1`) as `INSTANCE_ID` to allow the CI/CD pipeline to deploy directly into that EC2 instance.
+This value must be manually copied into the **GitHub Variables** of this repository (`Devops-Lab1`) as `INSTANCE_ID` to allow the CI/CD pipeline to deploy directly into that EC2 instance.
 
 ---
 
